@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-CommerXE — API Test Client</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #050608;
+  --surface:   #0d0f14;
+  --surface2:  #151820;
+  --border:    rgba(255,255,255,0.06);
+  --border2:   rgba(255,255,255,0.12);
+  --gold:      #f5a623;
+  --gold2:     #ffcc6b;
+  --teal:      #00e5c4;
+  --red:       #ff3b5c;
+  --green:     #00e57a;
+  --purple:    #a78bfa;
+  --text:      #e2e4ed;
+  --muted:     #5a5f72;
+  --mono:      'Space Mono', monospace;
+  --sans:      'DM Sans', sans-serif;
+  --display:   'Bebas Neue', sans-serif;
+  --radius:    6px;
+  --radius-lg: 12px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 260px 1fr 340px;
+  grid-template-rows: 52px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Topbar ───────────────────────────────────────────────────────── */
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 1.5rem;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.logo {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.logo sup { font-size: .5rem; color: var(--muted); vertical-align: super; }
+
+.topbar-tag {
+  font-family: var(--mono);
+  font-size: .65rem;
+  color: var(--teal);
+  background: rgba(0,229,196,.08);
+  border: 1px solid rgba(0,229,196,.2);
+  padding: .2rem .6rem;
+  border-radius: 3px;
+  letter-spacing: .5px;
+}
+
+.base-url-wrap {
+  display: flex; align-items: center; gap: .5rem;
+  margin-left: auto;
+}
+.base-url-label { font-size: .72rem; color: var(--muted); font-family: var(--mono); }
+.base-url-input {
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text); font-family: var(--mono); font-size: .72rem;
+  padding: .3rem .7rem; border-radius: var(--radius);
+  outline: none; width: 220px;
+  transition: border-color .2s;
+}
+.base-url-input:focus { border-color: var(--gold); }
+
+.auth-status {
+  font-family: var(--mono); font-size: .65rem;
+  padding: .25rem .65rem; border-radius: 3px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.auth-status.authed { color: var(--green); border-color: rgba(0,229,122,.25); background: rgba(0,229,122,.06); }
+.auth-status.unauthed { color: var(--muted); border-color: var(--border); }
+
+/* ── Sidebar ──────────────────────────────────────────────────────── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 1rem 0;
+}
+
+.sidebar-section {
+  font-family: var(--mono);
+  font-size: .6rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 1rem 1.2rem .4rem;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .55rem 1.2rem;
+  cursor: pointer;
+  font-size: .8rem;
+  color: var(--muted);
+  border-left: 2px solid transparent;
+  transition: all .15s;
+  user-select: none;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,.03); }
+.nav-item.active {
+  color: var(--text);
+  border-left-color: var(--gold);
+  background: rgba(245,166,35,.06);
+}
+.nav-item .method {
+  font-family: var(--mono);
+  font-size: .58rem;
+  font-weight: 700;
+  width: 36px; flex-shrink: 0;
+  text-align: center;
+  padding: .1rem .2rem;
+  border-radius: 3px;
+  letter-spacing: .3px;
+}
+.GET    { color: var(--teal);   background: rgba(0,229,196,.1); }
+.POST   { color: var(--gold);   background: rgba(245,166,35,.1); }
+.PUT    { color: var(--purple); background: rgba(167,139,250,.1); }
+.PATCH  { color: #60a5fa;       background: rgba(96,165,250,.1); }
+.DELETE { color: var(--red);    background: rgba(255,59,92,.1); }
+
+.nav-label { font-size: .78rem; line-height: 1.3; }
+
+/* ── Main panel ───────────────────────────────────────────────────── */
+.main {
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 1.2rem;
+}
+
+/* ── Request builder ─────────────────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.panel-header {
+  padding: .9rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .8rem;
+}
+.panel-title {
+  font-family: var(--mono); font-size: .72rem;
+  color: var(--muted); letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.endpoint-bar {
+  display: flex; gap: .6rem; align-items: center;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+.method-badge {
+  font-family: var(--mono); font-size: .7rem; font-weight: 700;
+  padding: .35rem .8rem; border-radius: var(--radius);
+  min-width: 64px; text-align: center;
+}
+.endpoint-path {
+  flex: 1; background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text); font-family: var(--mono); font-size: .8rem;
+  padding: .45rem .9rem; border-radius: var(--radius);
+  outline: none;
+  transition: border-color .2s;
+}
+.endpoint-path:focus { border-color: var(--gold); }
+.send-btn {
+  background: var(--gold); color: #000;
+  font-family: var(--mono); font-size: .72rem; font-weight: 700;
+  border: none; border-radius: var(--radius);
+  padding: .45rem 1.2rem; cursor: pointer;
+  letter-spacing: .5px; text-transform: uppercase;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.send-btn:hover { background: var(--gold2); }
+.send-btn:active { transform: scale(.97); }
+.send-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Tabs ─────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  padding: 0 1.2rem;
+}
+.tab {
+  font-family: var(--mono); font-size: .65rem;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); padding: .65rem .8rem;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all .15s; margin-bottom: -1px;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+.tab-content { padding: 1rem 1.2rem; display: none; }
+.tab-content.active { display: block; }
+
+/* ── Body editor ─────────────────────────────────────────────────── */
+.body-editor {
+  width: 100%;
+  min-height: 140px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--teal);
+  font-family: var(--mono); font-size: .75rem;
+  line-height: 1.6;
+  padding: .8rem 1rem;
+  border-radius: var(--radius);
+  outline: none; resize: vertical;
+  transition: border-color .2s;
+}
+.body-editor:focus { border-color: var(--gold); }
+
+/* ── Params table ────────────────────────────────────────────────── */
+.params-grid {
+  display: grid; grid-template-columns: 1fr 1fr auto;
+  gap: .4rem; align-items: center;
+}
+.param-input {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--mono); font-size: .72rem;
+  padding: .35rem .65rem; border-radius: var(--radius); outline: none;
+  width: 100%;
+}
+.param-input:focus { border-color: var(--gold); }
+.param-input::placeholder { color: var(--muted); }
+.icon-btn {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted); border-radius: var(--radius);
+  width: 28px; height: 28px; cursor: pointer; font-size: .8rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.icon-btn:hover { color: var(--red); border-color: var(--red); }
+.add-param-btn {
+  margin-top: .5rem;
+  background: transparent; border: 1px dashed var(--border2);
+  color: var(--muted); font-family: var(--mono); font-size: .65rem;
+  padding: .3rem .8rem; border-radius: var(--radius); cursor: pointer;
+  transition: all .15s; letter-spacing: .3px;
+}
+.add-param-btn:hover { color: var(--teal); border-color: var(--teal); }
+
+/* ── Auth section ────────────────────────────────────────────────── */
+.auth-row {
+  display: flex; gap: .6rem; align-items: center; margin-bottom: .6rem;
+}
+.auth-toggle {
+  font-family: var(--mono); font-size: .65rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); padding: .3rem .7rem; border-radius: var(--radius);
+  cursor: pointer; transition: all .15s;
+}
+.auth-toggle.active { color: var(--gold); border-color: rgba(245,166,35,.4); background: rgba(245,166,35,.08); }
+.token-display {
+  flex: 1; font-family: var(--mono); font-size: .62rem;
+  color: var(--muted); word-break: break-all; line-height: 1.5;
+}
+.token-display.has-token { color: var(--teal); }
+
+/* ── Response panel ──────────────────────────────────────────────── */
+.response-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  flex: 1;
+}
+.response-meta {
+  padding: .75rem 1.2rem;
+  display: flex; align-items: center; gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.status-badge {
+  font-family: var(--mono); font-size: .7rem; font-weight: 700;
+  padding: .25rem .7rem; border-radius: 3px;
+}
+.status-2xx { color: var(--green); background: rgba(0,229,122,.1); border: 1px solid rgba(0,229,122,.25); }
+.status-3xx { color: var(--purple); background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25); }
+.status-4xx { color: var(--gold); background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.25); }
+.status-5xx { color: var(--red); background: rgba(255,59,92,.1); border: 1px solid rgba(255,59,92,.25); }
+.res-time {
+  font-family: var(--mono); font-size: .65rem; color: var(--muted);
+}
+.res-size {
+  font-family: var(--mono); font-size: .65rem; color: var(--muted);
+  margin-left: auto;
+}
+.copy-btn {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted); font-family: var(--mono); font-size: .62rem;
+  padding: .22rem .6rem; border-radius: 3px; cursor: pointer;
+  transition: all .15s; letter-spacing: .3px;
+}
+.copy-btn:hover { color: var(--teal); border-color: var(--teal); }
+.copy-btn.copied { color: var(--green); border-color: rgba(0,229,122,.4); }
+
+.response-body {
+  padding: 1rem 1.2rem;
+  font-family: var(--mono); font-size: .72rem;
+  line-height: 1.7; overflow-x: auto;
+  max-height: 400px; overflow-y: auto;
+  white-space: pre-wrap; word-break: break-word;
+  color: var(--text);
+}
+.response-body.empty { color: var(--muted); font-style: italic; text-align: center; padding: 3rem; }
+.json-key    { color: #a78bfa; }
+.json-str    { color: var(--teal); }
+.json-num    { color: var(--gold); }
+.json-bool   { color: var(--red); }
+.json-null   { color: var(--muted); }
+
+/* ── Right panel (history + env) ─────────────────────────────────── */
+.right-panel {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.right-tabs {
+  display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.right-tab {
+  flex: 1; text-align: center;
+  font-family: var(--mono); font-size: .62rem;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); padding: .7rem .5rem;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all .15s;
+}
+.right-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.right-content { flex: 1; overflow-y: auto; padding: .8rem; display: none; }
+.right-content.active { display: block; }
+
+/* ── History items ───────────────────────────────────────────────── */
+.hist-item {
+  padding: .65rem .75rem; border-radius: var(--radius);
+  border: 1px solid var(--border); margin-bottom: .4rem;
+  cursor: pointer; transition: all .15s;
+}
+.hist-item:hover { border-color: var(--border2); background: rgba(255,255,255,.02); }
+.hist-method { font-family: var(--mono); font-size: .6rem; font-weight: 700; }
+.hist-path { font-family: var(--mono); font-size: .65rem; color: var(--text); margin-top: .15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-meta { font-family: var(--mono); font-size: .58rem; color: var(--muted); margin-top: .1rem; display: flex; gap: .5rem; }
+
+/* ── Env vars ────────────────────────────────────────────────────── */
+.env-var {
+  margin-bottom: .5rem;
+  display: flex; flex-direction: column; gap: .25rem;
+}
+.env-label { font-family: var(--mono); font-size: .6rem; color: var(--muted); letter-spacing: .3px; }
+.env-val {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--teal); font-family: var(--mono); font-size: .68rem;
+  padding: .35rem .65rem; border-radius: var(--radius);
+  outline: none; width: 100%;
+  transition: border-color .2s;
+}
+.env-val:focus { border-color: var(--gold); }
+.env-val::placeholder { color: var(--muted); }
+.env-val.secret { color: var(--purple); }
+
+/* ── Quick-action chips ───────────────────────────────────────────── */
+.quick-chips {
+  display: flex; flex-wrap: wrap; gap: .4rem;
+  padding: .6rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+.chip {
+  font-family: var(--mono); font-size: .6rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); padding: .2rem .6rem; border-radius: 3px;
+  cursor: pointer; transition: all .15s; letter-spacing: .3px;
+}
+.chip:hover { color: var(--text); border-color: var(--border2); }
+.chip.loaded { color: var(--teal); border-color: rgba(0,229,196,.25); background: rgba(0,229,196,.05); }
+
+/* ── Loading spinner ─────────────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid rgba(245,166,35,.2);
+  border-top-color: var(--gold);
+  animation: spin .6s linear infinite;
+  display: none;
+}
+.spinner.active { display: inline-block; }
+
+/* ── Toast ───────────────────────────────────────────────────────── */
+.toast-wrap {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999;
+  display: flex; flex-direction: column; gap: .4rem;
+  pointer-events: none;
+}
+.toast {
+  font-family: var(--mono); font-size: .7rem;
+  background: var(--surface2); border: 1px solid var(--border2);
+  padding: .6rem 1rem; border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  display: flex; align-items: center; gap: .5rem;
+  animation: slideUp .25s ease;
+  pointer-events: auto;
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.toast.success { border-color: rgba(0,229,122,.3); color: var(--green); }
+.toast.error   { border-color: rgba(255,59,92,.3);  color: var(--red); }
+.toast.info    { border-color: rgba(0,229,196,.3);  color: var(--teal); }
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Misc ─────────────────────────────────────────────────────────── */
+.section-divider {
+  height: 1px; background: var(--border); margin: .5rem 0;
+}
+.helper-text {
+  font-size: .68rem; color: var(--muted); line-height: 1.6; margin-top: .4rem;
+}
+code { font-family: var(--mono); font-size: .85em; color: var(--teal); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ TOP BAR -->
+<header class="topbar">
+  <div class="logo">E-CommerXE<sup>®</sup></div>
+  <span class="topbar-tag">API TEST CLIENT</span>
+
+  <div class="base-url-wrap">
+    <span class="base-url-label">BASE URL</span>
+    <input class="base-url-input" id="baseUrl" value="http://localhost:3000" placeholder="http://localhost:3000">
+  </div>
+
+  <div class="auth-status unauthed" id="authStatusBadge">● NO TOKEN</div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════ SIDEBAR -->
+<nav class="sidebar">
+
+  <div class="sidebar-section">Authentication</div>
+  <div class="nav-item active" onclick="loadPreset('register')">
+    <span class="method POST">POST</span><span class="nav-label">/auth/register</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('verifyEmail')">
+    <span class="method GET">GET</span><span class="nav-label">/auth/verify-email</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('login')">
+    <span class="method POST">POST</span><span class="nav-label">/auth/login</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('refresh')">
+    <span class="method POST">POST</span><span class="nav-label">/auth/refresh</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('logout')">
+    <span class="method POST">POST</span><span class="nav-label">/auth/logout</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('mfaEnable')">
+    <span class="method POST">POST</span><span class="nav-label">/auth/mfa/enable</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('mfaConfirm')">
+    <span class="method POST">POST</span><span class="nav-label">/auth/mfa/confirm</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('passwordReset')">
+    <span class="method POST">POST</span><span class="nav-label">/auth/password-reset</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('passwordResetConfirm')">
+    <span class="method POST">POST</span><span class="nav-label">/auth/password-reset/confirm</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('googleAuth')">
+    <span class="method GET">GET</span><span class="nav-label">/auth/google</span>
+  </div>
+
+  <div class="sidebar-section">Users</div>
+  <div class="nav-item" onclick="loadPreset('getProfile')">
+    <span class="method GET">GET</span><span class="nav-label">/user/profile</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('updateProfile')">
+    <span class="method PUT">PUT</span><span class="nav-label">/user/profile</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('exportData')">
+    <span class="method GET">GET</span><span class="nav-label">/user/export</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('deleteAccount')">
+    <span class="method DELETE">DELETE</span><span class="nav-label">/user/account</span>
+  </div>
+
+  <div class="sidebar-section">Businesses</div>
+  <div class="nav-item" onclick="loadPreset('createBusiness')">
+    <span class="method POST">POST</span><span class="nav-label">/businesses</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('listBusinesses')">
+    <span class="method GET">GET</span><span class="nav-label">/businesses/mine</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('getBusiness')">
+    <span class="method GET">GET</span><span class="nav-label">/businesses/:id</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('updateBusiness')">
+    <span class="method PUT">PUT</span><span class="nav-label">/businesses/:id</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('deleteBusiness')">
+    <span class="method DELETE">DELETE</span><span class="nav-label">/businesses/:id</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('restoreBusiness')">
+    <span class="method PATCH">PATCH</span><span class="nav-label">/businesses/:id/restore</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('approveBusiness')">
+    <span class="method PATCH">PATCH</span><span class="nav-label">/businesses/:id/approve</span>
+  </div>
+
+  <div class="sidebar-section">Public Cards</div>
+  <div class="nav-item" onclick="loadPreset('listCards')">
+    <span class="method GET">GET</span><span class="nav-label">/cards</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('getCard')">
+    <span class="method GET">GET</span><span class="nav-label">/cards/:slug</span>
+  </div>
+
+  <div class="sidebar-section">Search</div>
+  <div class="nav-item" onclick="loadPreset('search')">
+    <span class="method GET">GET</span><span class="nav-label">/search</span>
+  </div>
+
+  <div class="sidebar-section">Analytics</div>
+  <div class="nav-item" onclick="loadPreset('trackEvent')">
+    <span class="method POST">POST</span><span class="nav-label">/analytics/events</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('getDashboard')">
+    <span class="method GET">GET</span><span class="nav-label">/analytics/dashboard</span>
+  </div>
+
+  <div class="sidebar-section">Media</div>
+  <div class="nav-item" onclick="loadPreset('getPresign')">
+    <span class="method GET">GET</span><span class="nav-label">/media/presign</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('deleteMedia')">
+    <span class="method DELETE">DELETE</span><span class="nav-label">/media/:id</span>
+  </div>
+
+  <div class="sidebar-section">Admin</div>
+  <div class="nav-item" onclick="loadPreset('adminMetrics')">
+    <span class="method GET">GET</span><span class="nav-label">/admin/metrics</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('adminUsers')">
+    <span class="method GET">GET</span><span class="nav-label">/admin/users</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('adminSuspend')">
+    <span class="method PUT">PUT</span><span class="nav-label">/admin/users/:id/suspend</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('adminPending')">
+    <span class="method GET">GET</span><span class="nav-label">/admin/businesses/pending</span>
+  </div>
+  <div class="nav-item" onclick="loadPreset('adminAuditLogs')">
+    <span class="method GET">GET</span><span class="nav-label">/admin/audit-logs</span>
+  </div>
+
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ MAIN -->
+<main class="main">
+
+  <!-- Request builder -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Request</span>
+      <div class="spinner" id="spinner"></div>
+    </div>
+
+    <!-- Quick load chips -->
+    <div class="quick-chips" id="quickChips">
+      <span class="chip" onclick="loadPreset('register')">Register</span>
+      <span class="chip" onclick="loadPreset('login')">Login</span>
+      <span class="chip" onclick="loadPreset('search')">Search</span>
+      <span class="chip" onclick="loadPreset('listCards')">List Cards</span>
+      <span class="chip" onclick="loadPreset('createBusiness')">Create Biz</span>
+      <span class="chip" onclick="loadPreset('adminMetrics')">Admin KPIs</span>
+    </div>
+
+    <!-- Endpoint bar -->
+    <div class="endpoint-bar">
+      <select id="methodSelect" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:.72rem;padding:.42rem .6rem;border-radius:var(--radius);outline:none;cursor:pointer;">
+        <option>GET</option>
+        <option>POST</option>
+        <option>PUT</option>
+        <option>PATCH</option>
+        <option>DELETE</option>
+      </select>
+      <input class="endpoint-path" id="endpointPath" placeholder="/api/v1/..." value="/api/v1/search">
+      <button class="send-btn" id="sendBtn" onclick="sendRequest()">▶ Send</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('params', this)">Params</div>
+      <div class="tab" onclick="switchTab('body', this)">Body</div>
+      <div class="tab" onclick="switchTab('auth', this)">Auth</div>
+      <div class="tab" onclick="switchTab('headers', this)">Headers</div>
+    </div>
+
+    <!-- Params tab -->
+    <div class="tab-content active" id="tab-params">
+      <div class="params-grid" id="paramsGrid"></div>
+      <button class="add-param-btn" onclick="addParam()">+ Add Query Param</button>
+    </div>
+
+    <!-- Body tab -->
+    <div class="tab-content" id="tab-body">
+      <textarea class="body-editor" id="bodyEditor" placeholder='{ "key": "value" }'></textarea>
+      <div class="helper-text">JSON body. Leave empty for GET requests.</div>
+    </div>
+
+    <!-- Auth tab -->
+    <div class="tab-content" id="tab-auth">
+      <div class="auth-row">
+        <button class="auth-toggle active" id="authToggle" onclick="toggleAuth()">Bearer Token</button>
+        <div class="token-display" id="tokenDisplay">No token stored. Login first.</div>
+      </div>
+      <div class="helper-text">Token is auto-populated after a successful <code>POST /auth/login</code> response.</div>
+      <div style="margin-top:.8rem">
+        <input class="param-input" id="manualToken" placeholder="Paste token manually…" style="width:100%"
+          oninput="setManualToken(this.value)">
+      </div>
+    </div>
+
+    <!-- Headers tab -->
+    <div class="tab-content" id="tab-headers">
+      <div class="params-grid" id="headersGrid"></div>
+      <button class="add-param-btn" onclick="addHeader()">+ Add Header</button>
+    </div>
+  </div>
+
+  <!-- Response panel -->
+  <div class="response-panel">
+    <div class="response-meta" id="responseMeta">
+      <span style="font-family:var(--mono);font-size:.65rem;color:var(--muted)">Awaiting request…</span>
+    </div>
+    <pre class="response-body empty" id="responseBody">Hit ▶ Send to see the response here.</pre>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════ RIGHT PANEL -->
+<aside class="right-panel">
+  <div class="right-tabs">
+    <div class="right-tab active" onclick="switchRightTab('env', this)">Env</div>
+    <div class="right-tab" onclick="switchRightTab('history', this)">History</div>
+    <div class="right-tab" onclick="switchRightTab('tokens', this)">Tokens</div>
+  </div>
+
+  <!-- Env vars -->
+  <div class="right-content active" id="right-env">
+    <div class="env-var">
+      <span class="env-label">ACCESS_TOKEN</span>
+      <input class="env-val secret" id="env_token" placeholder="auto-filled on login" readonly>
+    </div>
+    <div class="env-var">
+      <span class="env-label">BUSINESS_ID</span>
+      <input class="env-val" id="env_bizId" placeholder="paste or auto-fill">
+    </div>
+    <div class="env-var">
+      <span class="env-label">USER_ID</span>
+      <input class="env-val" id="env_userId" placeholder="paste or auto-fill">
+    </div>
+    <div class="env-var">
+      <span class="env-label">CATEGORY_ID</span>
+      <input class="env-val" id="env_catId" placeholder="paste category UUID">
+    </div>
+    <div class="env-var">
+      <span class="env-label">SLUG</span>
+      <input class="env-val" id="env_slug" placeholder="business-slug">
+    </div>
+    <div class="env-var">
+      <span class="env-label">MEDIA_ID</span>
+      <input class="env-val" id="env_mediaId" placeholder="paste media UUID">
+    </div>
+    <div class="section-divider"></div>
+    <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-bottom:.5rem;letter-spacing:.5px;text-transform:uppercase">Actions</div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+      <button class="chip" onclick="clearToken()" style="color:var(--red)">Clear Token</button>
+      <button class="chip" onclick="clearHistory()" style="color:var(--muted)">Clear History</button>
+      <button class="chip" onclick="exportHistory()">Export History</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="right-content" id="right-history">
+    <div id="historyList" style="display:flex;flex-direction:column;gap:.3rem;">
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--muted);text-align:center;padding:2rem 0;">No requests yet.</div>
+    </div>
+  </div>
+
+  <!-- Tokens -->
+  <div class="right-content" id="right-tokens">
+    <div class="env-var">
+      <span class="env-label">JWT Payload</span>
+      <pre id="jwtPayload" style="font-family:var(--mono);font-size:.62rem;color:var(--teal);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem;white-space:pre-wrap;word-break:break-all;min-height:60px;margin-top:.25rem;">—</pre>
+    </div>
+    <div class="env-var">
+      <span class="env-label">Token Expires</span>
+      <div id="tokenExpiry" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-top:.25rem;">—</div>
+    </div>
+    <div class="section-divider"></div>
+    <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:.4rem">Raw Token</div>
+    <div id="rawToken" style="font-family:var(--mono);font-size:.58rem;color:var(--muted);word-break:break-all;line-height:1.5;">—</div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════ TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+
+let accessToken = localStorage.getItem('ecx_token') || '';
+let history_log = JSON.parse(localStorage.getItem('ecx_history') || '[]');
+let useAuth = true;
+let paramRows = [];
+let headerRows = [];
+
+// ═══════════════════════════════════════════════════════════════════
+// PRESETS — all endpoints pre-loaded with sensible defaults
+// ═══════════════════════════════════════════════════════════════════
+
+const PRESETS = {
+  // ── Auth ──────────────────────────────────────────────────────────
+  register: {
+    method: 'POST', path: '/api/v1/auth/register', auth: false,
+    body: JSON.stringify({ email: 'owner@example.com', password: 'P@ssw0rd!2024', display_name: 'Test Owner', captcha_token: 'test-token' }, null, 2),
+    params: [], headers: [],
+  },
+  verifyEmail: {
+    method: 'GET', path: '/api/v1/auth/verify-email', auth: false,
+    body: '',
+    params: [['token', 'YOUR_VERIFICATION_TOKEN']],
+    headers: [],
+  },
+  login: {
+    method: 'POST', path: '/api/v1/auth/login', auth: false,
+    body: JSON.stringify({ email: 'owner@example.com', password: 'P@ssw0rd!2024' }, null, 2),
+    params: [], headers: [],
+  },
+  refresh: {
+    method: 'POST', path: '/api/v1/auth/refresh', auth: false,
+    body: '',
+    params: [], headers: [['Cookie', 'refresh_token=YOUR_REFRESH_TOKEN']],
+  },
+  logout: {
+    method: 'POST', path: '/api/v1/auth/logout', auth: true,
+    body: '', params: [], headers: [],
+  },
+  mfaEnable: {
+    method: 'POST', path: '/api/v1/auth/mfa/enable', auth: true,
+    body: '', params: [], headers: [],
+  },
+  mfaConfirm: {
+    method: 'POST', path: '/api/v1/auth/mfa/confirm', auth: true,
+    body: JSON.stringify({ totp_code: '123456' }, null, 2),
+    params: [], headers: [],
+  },
+  passwordReset: {
+    method: 'POST', path: '/api/v1/auth/password-reset', auth: false,
+    body: JSON.stringify({ email: 'owner@example.com' }, null, 2),
+    params: [], headers: [],
+  },
+  passwordResetConfirm: {
+    method: 'POST', path: '/api/v1/auth/password-reset/confirm', auth: false,
+    body: JSON.stringify({ token: 'RESET_TOKEN_FROM_EMAIL', new_password: 'NewP@ss!2024' }, null, 2),
+    params: [], headers: [],
+  },
+  googleAuth: {
+    method: 'GET', path: '/api/v1/auth/google', auth: false,
+    body: '', params: [], headers: [],
+  },
+
+  // ── Users ─────────────────────────────────────────────────────────
+  getProfile: {
+    method: 'GET', path: '/api/v1/user/profile', auth: true,
+    body: '', params: [], headers: [],
+  },
+  updateProfile: {
+    method: 'PUT', path: '/api/v1/user/profile', auth: true,
+    body: JSON.stringify({ display_name: 'Updated Name', avatar_url: 'https://example.com/avatar.jpg' }, null, 2),
+    params: [], headers: [],
+  },
+  exportData: {
+    method: 'GET', path: '/api/v1/user/export', auth: true,
+    body: '', params: [], headers: [],
+  },
+  deleteAccount: {
+    method: 'DELETE', path: '/api/v1/user/account', auth: true,
+    body: '', params: [], headers: [],
+  },
+
+  // ── Businesses ────────────────────────────────────────────────────
+  createBusiness: {
+    method: 'POST', path: '/api/v1/businesses', auth: true,
+    body: JSON.stringify({
+      name: 'SwiftWheels Kenya',
+      description: 'Affordable car hire service in Nairobi.',
+      category_ids: ['PASTE_CATEGORY_UUID_HERE'],
+      phone: '+254712345678',
+      email: 'info@swiftwheels.co.ke',
+      website_url: 'https://swiftwheels.co.ke',
+      location: 'Kilimani, Nairobi',
+      template_id: 1,
+    }, null, 2),
+    params: [], headers: [],
+  },
+  listBusinesses: {
+    method: 'GET', path: '/api/v1/businesses/mine', auth: true,
+    body: '',
+    params: [['page', '1'], ['limit', '20']],
+    headers: [],
+  },
+  getBusiness: {
+    method: 'GET', path: '/api/v1/businesses/BUSINESS_ID', auth: true,
+    body: '', params: [], headers: [],
+  },
+  updateBusiness: {
+    method: 'PUT', path: '/api/v1/businesses/BUSINESS_ID', auth: true,
+    body: JSON.stringify({ name: 'SwiftWheels Kenya Updated', description: 'Updated description.', category_ids: ['CATEGORY_UUID'] }, null, 2),
+    params: [], headers: [],
+  },
+  deleteBusiness: {
+    method: 'DELETE', path: '/api/v1/businesses/BUSINESS_ID', auth: true,
+    body: '', params: [], headers: [],
+  },
+  restoreBusiness: {
+    method: 'PATCH', path: '/api/v1/businesses/BUSINESS_ID/restore', auth: true,
+    body: '', params: [], headers: [],
+  },
+  approveBusiness: {
+    method: 'PATCH', path: '/api/v1/businesses/BUSINESS_ID/approve', auth: true,
+    body: '', params: [], headers: [],
+  },
+
+  // ── Public Cards ──────────────────────────────────────────────────
+  listCards: {
+    method: 'GET', path: '/api/v1/cards', auth: false,
+    body: '',
+    params: [['page', '1'], ['limit', '20']],
+    headers: [],
+  },
+  getCard: {
+    method: 'GET', path: '/api/v1/cards/swiftwheels-kenya', auth: false,
+    body: '', params: [], headers: [],
+  },
+
+  // ── Search ────────────────────────────────────────────────────────
+  search: {
+    method: 'GET', path: '/api/v1/search', auth: false,
+    body: '',
+    params: [['q', 'car rental'], ['category', ''], ['verified', ''], ['page', '1'], ['limit', '20']],
+    headers: [],
+  },
+
+  // ── Analytics ─────────────────────────────────────────────────────
+  trackEvent: {
+    method: 'POST', path: '/api/v1/analytics/events', auth: false,
+    body: JSON.stringify({ business_id: 'BUSINESS_UUID', event_type: 'view', session_id: 'a'.repeat(64), referrer: 'https://google.com' }, null, 2),
+    params: [], headers: [],
+  },
+  getDashboard: {
+    method: 'GET', path: '/api/v1/analytics/dashboard', auth: true,
+    body: '',
+    params: [['business_id', 'BUSINESS_UUID'], ['days', '30']],
+    headers: [],
+  },
+
+  // ── Media ─────────────────────────────────────────────────────────
+  getPresign: {
+    method: 'GET', path: '/api/v1/media/presign', auth: true,
+    body: '',
+    params: [['business_id', 'BUSINESS_UUID'], ['filename', 'logo.jpg']],
+    headers: [],
+  },
+  deleteMedia: {
+    method: 'DELETE', path: '/api/v1/media/MEDIA_ID', auth: true,
+    body: '', params: [], headers: [],
+  },
+
+  // ── Admin ─────────────────────────────────────────────────────────
+  adminMetrics: {
+    method: 'GET', path: '/api/v1/admin/metrics', auth: true,
+    body: '', params: [], headers: [],
+  },
+  adminUsers: {
+    method: 'GET', path: '/api/v1/admin/users', auth: true,
+    body: '',
+    params: [['page', '1'], ['limit', '20'], ['search', '']],
+    headers: [],
+  },
+  adminSuspend: {
+    method: 'PUT', path: '/api/v1/admin/users/USER_ID/suspend', auth: true,
+    body: '', params: [], headers: [],
+  },
+  adminPending: {
+    method: 'GET', path: '/api/v1/admin/businesses/pending', auth: true,
+    body: '',
+    params: [['page', '1'], ['limit', '20']],
+    headers: [],
+  },
+  adminAuditLogs: {
+    method: 'GET', path: '/api/v1/admin/audit-logs', auth: true,
+    body: '',
+    params: [['page', '1'], ['limit', '50']],
+    headers: [],
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PRESET LOADER
+// ═══════════════════════════════════════════════════════════════════
+
+function loadPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+
+  // Swap placeholders with env values
+  let path = p.path
+    .replace('BUSINESS_ID', getEnv('bizId') || 'BUSINESS_ID')
+    .replace('BUSINESS_UUID', getEnv('bizId') || 'BUSINESS_UUID')
+    .replace('USER_ID', getEnv('userId') || 'USER_ID')
+    .replace('CATEGORY_UUID', getEnv('catId') || 'CATEGORY_UUID')
+    .replace('MEDIA_ID', getEnv('mediaId') || 'MEDIA_ID');
+
+  document.getElementById('methodSelect').value = p.method;
+  document.getElementById('endpointPath').value = path;
+  document.getElementById('bodyEditor').value = p.body || '';
+
+  useAuth = p.auth;
+  document.getElementById('authToggle').classList.toggle('active', useAuth);
+
+  // Params
+  paramRows = p.params.map(([k, v]) => ({ key: k, val: v }));
+  renderParams();
+
+  // Headers
+  headerRows = p.headers.map(([k, v]) => ({ key: k, val: v }));
+  renderHeaders();
+
+  // Update sidebar active state
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget && event.currentTarget.classList.add('active');
+
+  showToast(`Loaded: ${p.method} ${path}`, 'info');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SEND REQUEST
+// ═══════════════════════════════════════════════════════════════════
+
+async function sendRequest() {
+  const base   = document.getElementById('baseUrl').value.replace(/\/$/, '');
+  const method = document.getElementById('methodSelect').value;
+  const rawPath = document.getElementById('endpointPath').value;
+
+  // Build query string from params
+  const params = paramRows.filter(r => r.key.trim());
+  const qs = params.length
+    ? '?' + params.map(r => `${encodeURIComponent(r.key)}=${encodeURIComponent(r.val)}`).join('&')
+    : '';
+  const url = `${base}${rawPath}${qs}`;
+
+  // Build headers
+  const hdrs = { 'Content-Type': 'application/json' };
+  if (useAuth && accessToken) hdrs['Authorization'] = `Bearer ${accessToken}`;
+  headerRows.filter(r => r.key.trim()).forEach(r => { hdrs[r.key] = r.val; });
+
+  // Body
+  const rawBody = document.getElementById('bodyEditor').value.trim();
+  let body = undefined;
+  if (rawBody && method !== 'GET') {
+    try { JSON.parse(rawBody); body = rawBody; }
+    catch { showToast('Invalid JSON body', 'error'); return; }
+  }
+
+  // UI state
+  setLoading(true);
+  const t0 = Date.now();
+
+  try {
+    const res = await fetch(url, { method, headers: hdrs, body, credentials: 'include' });
+    const elapsed = Date.now() - t0;
+    const contentType = res.headers.get('content-type') || '';
+    let data;
+    let raw = '';
+
+    if (contentType.includes('application/json')) {
+      data = await res.json();
+      raw = JSON.stringify(data, null, 2);
+    } else {
+      raw = await res.text();
+      data = raw;
+    }
+
+    renderResponse(res.status, elapsed, raw, data);
+    addHistory(method, rawPath, res.status, elapsed);
+
+    // Auto-extract token from login response
+    if (rawPath.includes('/auth/login') && data?.data?.access_token) {
+      setToken(data.data.access_token);
+      showToast('✓ Token saved from login response', 'success');
+    }
+
+    // Auto-extract business_id from create response
+    if (rawPath === '/api/v1/businesses' && method === 'POST' && data?.data?.id) {
+      document.getElementById('env_bizId').value = data.data.id;
+      showToast(`✓ Business ID saved: ${data.data.id.slice(0, 8)}…`, 'success');
+    }
+
+    // Auto-extract user_id from profile
+    if (rawPath.includes('/user/profile') && data?.data?.id) {
+      document.getElementById('env_userId').value = data.data.id;
+    }
+
+  } catch (err) {
+    const elapsed = Date.now() - t0;
+    renderResponse(0, elapsed, `Network error: ${err.message}`, null);
+    showToast(`Network error: ${err.message}`, 'error');
+    addHistory(method, rawPath, 0, elapsed);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════════════════════════════════
+
+function renderResponse(status, elapsed, raw, data) {
+  const meta = document.getElementById('responseMeta');
+  const body = document.getElementById('responseBody');
+
+  const cls = status >= 500 ? 'status-5xx'
+            : status >= 400 ? 'status-4xx'
+            : status >= 300 ? 'status-3xx'
+            : status >= 200 ? 'status-2xx'
+            : 'status-5xx';
+
+  const label = status === 0 ? 'ERR' : status;
+  const size = raw ? `${(new Blob([raw]).size / 1024).toFixed(1)} KB` : '—';
+
+  meta.innerHTML = `
+    <span class="status-badge ${cls}">${label}</span>
+    <span class="res-time">⏱ ${elapsed}ms</span>
+    <span class="res-size">${size}</span>
+    <button class="copy-btn" id="copyBtn" onclick="copyResponse()">Copy</button>
+  `;
+
+  body.className = 'response-body';
+  body.innerHTML = syntaxHighlight(raw);
+}
+
+function syntaxHighlight(json) {
+  if (!json) return '<em style="color:var(--muted)">Empty response</em>';
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+      let cls = 'json-num';
+      if (/^"/.test(match)) {
+        cls = /:$/.test(match) ? 'json-key' : 'json-str';
+      } else if (/true|false/.test(match)) {
+        cls = 'json-bool';
+      } else if (/null/.test(match)) {
+        cls = 'json-null';
+      }
+      return `<span class="${cls}">${match}</span>`;
+    });
+}
+
+async function copyResponse() {
+  const raw = document.getElementById('responseBody').innerText;
+  await navigator.clipboard.writeText(raw);
+  const btn = document.getElementById('copyBtn');
+  if (btn) { btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500); }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PARAMS & HEADERS
+// ═══════════════════════════════════════════════════════════════════
+
+function renderParams() {
+  const grid = document.getElementById('paramsGrid');
+  grid.innerHTML = '';
+  paramRows.forEach((row, i) => {
+    grid.innerHTML += `
+      <input class="param-input" placeholder="key" value="${row.key}" oninput="paramRows[${i}].key=this.value">
+      <input class="param-input" placeholder="value" value="${row.val}" oninput="paramRows[${i}].val=this.value">
+      <button class="icon-btn" onclick="removeParam(${i})">✕</button>
+    `;
+  });
+}
+
+function addParam() { paramRows.push({ key: '', val: '' }); renderParams(); }
+function removeParam(i) { paramRows.splice(i, 1); renderParams(); }
+
+function renderHeaders() {
+  const grid = document.getElementById('headersGrid');
+  grid.innerHTML = '';
+  headerRows.forEach((row, i) => {
+    grid.innerHTML += `
+      <input class="param-input" placeholder="Header-Name" value="${row.key}" oninput="headerRows[${i}].key=this.value">
+      <input class="param-input" placeholder="value" value="${row.val}" oninput="headerRows[${i}].val=this.value">
+      <button class="icon-btn" onclick="removeHeader(${i})">✕</button>
+    `;
+  });
+}
+
+function addHeader() { headerRows.push({ key: '', val: '' }); renderHeaders(); }
+function removeHeader(i) { headerRows.splice(i, 1); renderHeaders(); }
+
+// ═══════════════════════════════════════════════════════════════════
+// TOKEN MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════
+
+function setToken(token) {
+  accessToken = token;
+  localStorage.setItem('ecx_token', token);
+  document.getElementById('env_token').value = token ? token.slice(0, 40) + '…' : '';
+  document.getElementById('authStatusBadge').textContent = token ? '● AUTHENTICATED' : '● NO TOKEN';
+  document.getElementById('authStatusBadge').className = 'auth-status ' + (token ? 'authed' : 'unauthed');
+
+  // Decode JWT payload for Tokens tab
+  try {
+    const parts = token.split('.');
+    const payload = JSON.parse(atob(parts[1]));
+    document.getElementById('jwtPayload').textContent = JSON.stringify(payload, null, 2);
+    document.getElementById('rawToken').textContent = token;
+    const exp = payload.exp ? new Date(payload.exp * 1000).toLocaleString() : '—';
+    const now = Date.now() / 1000;
+    const remaining = payload.exp ? Math.max(0, Math.round((payload.exp - now) / 60)) : null;
+    document.getElementById('tokenExpiry').textContent = exp + (remaining !== null ? ` (${remaining}min remaining)` : '');
+  } catch {
+    document.getElementById('jwtPayload').textContent = '—';
+  }
+}
+
+function clearToken() {
+  accessToken = '';
+  localStorage.removeItem('ecx_token');
+  setToken('');
+  document.getElementById('manualToken').value = '';
+  showToast('Token cleared', 'info');
+}
+
+function setManualToken(val) { if (val.length > 20) setToken(val); }
+
+function toggleAuth() {
+  useAuth = !useAuth;
+  document.getElementById('authToggle').classList.toggle('active', useAuth);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════════════════════
+
+function addHistory(method, path, status, elapsed) {
+  const entry = { method, path, status, elapsed, time: new Date().toLocaleTimeString() };
+  history_log.unshift(entry);
+  if (history_log.length > 50) history_log.pop();
+  localStorage.setItem('ecx_history', JSON.stringify(history_log));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!history_log.length) {
+    list.innerHTML = '<div style="font-family:var(--mono);font-size:.65rem;color:var(--muted);text-align:center;padding:2rem 0;">No requests yet.</div>';
+    return;
+  }
+  list.innerHTML = history_log.map((h, i) => {
+    const cls = h.status >= 500 ? 'status-5xx' : h.status >= 400 ? 'status-4xx' : h.status >= 200 ? 'status-2xx' : 'status-5xx';
+    return `
+      <div class="hist-item" onclick="replayHistory(${i})">
+        <div style="display:flex;gap:.4rem;align-items:center;">
+          <span class="hist-method ${h.method}">${h.method}</span>
+          <span class="status-badge ${cls}" style="font-size:.58rem;padding:.1rem .4rem">${h.status || 'ERR'}</span>
+        </div>
+        <div class="hist-path">${h.path}</div>
+        <div class="hist-meta"><span>${h.time}</span><span>${h.elapsed}ms</span></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function replayHistory(i) {
+  const h = history_log[i];
+  document.getElementById('methodSelect').value = h.method;
+  document.getElementById('endpointPath').value = h.path;
+}
+
+function clearHistory() { history_log = []; localStorage.removeItem('ecx_history'); renderHistory(); showToast('History cleared', 'info'); }
+function exportHistory() {
+  const blob = new Blob([JSON.stringify(history_log, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ecx-history-${Date.now()}.json`;
+  a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ENV HELPERS
+// ═══════════════════════════════════════════════════════════════════
+
+function getEnv(key) {
+  return document.getElementById(`env_${key}`)?.value || '';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UI UTILITIES
+// ═══════════════════════════════════════════════════════════════════
+
+function setLoading(on) {
+  document.getElementById('spinner').classList.toggle('active', on);
+  document.getElementById('sendBtn').disabled = on;
+  document.getElementById('sendBtn').textContent = on ? '…' : '▶ Send';
+}
+
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(`tab-${id}`).classList.add('active');
+}
+
+function switchRightTab(id, el) {
+  document.querySelectorAll('.right-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.right-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(`right-${id}`).classList.add('active');
+}
+
+function showToast(msg, type = 'info') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// Keyboard shortcut: Ctrl/Cmd + Enter → Send
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendRequest();
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+
+(function init() {
+  if (accessToken) setToken(accessToken);
+  renderHistory();
+  addParam(); // start with one blank param row
+  renderParams();
+  addHeader();
+  renderHeaders();
+
+  // Load default preset
+  const defaultPreset = PRESETS['search'];
+  document.getElementById('methodSelect').value = defaultPreset.method;
+  document.getElementById('endpointPath').value = defaultPreset.path;
+  paramRows = defaultPreset.params.map(([k, v]) => ({ key: k, val: v }));
+  renderParams();
+})();
+</script>
+</body>
+</html>

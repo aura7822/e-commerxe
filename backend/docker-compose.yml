@@ -1,0 +1,147 @@
+version: '3.9'
+
+# ── E-CommerXE — Local Development Stack ────────────────────────────────────
+# Start: docker compose up -d
+# Stop:  docker compose down -v
+
+services:
+
+  # ── PostgreSQL v15 ─────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecommerxe_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ecommerxe
+      POSTGRES_USER: ecommerxe_user
+      POSTGRES_PASSWORD: dev_password_change_in_prod
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ecommerxe_user -d ecommerxe']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerxe_net
+
+  # ── Redis v7 ───────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerxe_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass dev_redis_password
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'dev_redis_password', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ecommerxe_net
+
+  # ── NestJS API ────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: ecommerxe_api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ecommerxe
+      DB_USER: ecommerxe_user
+      DB_PASSWORD: dev_password_change_in_prod
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: dev_redis_password
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./src:/app/src:delegated
+      - ./keys:/app/keys:ro
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecommerxe_net
+
+  # ── Prometheus ────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ecommerxe_prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - '9090:9090'
+    networks:
+      - ecommerxe_net
+
+  # ── Grafana ───────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ecommerxe_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: dev_grafana_password
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - '3001:3000'
+    depends_on:
+      - prometheus
+    networks:
+      - ecommerxe_net
+
+  # ── Nginx (API Gateway + Rate Limiting) ───────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: ecommerxe_nginx
+    restart: unless-stopped
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - api
+    networks:
+      - ecommerxe_net
+
+# ── Volumes ──────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+# ── Network ──────────────────────────────────────────────────────────────────
+networks:
+  ecommerxe_net:
+    driver: bridge
