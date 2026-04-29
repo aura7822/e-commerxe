@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizHub — Business Marketing Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0e13;
+    --surface: #13171f;
+    --surface2: #1c2230;
+    --border: rgba(255,255,255,0.07);
+    --accent: #f5a623;
+    --accent2: #2dd4bf;
+    --text: #e8eaf0;
+    --muted: #7a8097;
+    --danger: #ff4d6d;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── SCREENS ─────────────────────────────────── */
+  .screen { display: none; animation: fadeIn .35s ease; }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── TOPBAR ──────────────────────────────────── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(11,14,19,.85);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex; align-items: center; gap: 1.5rem;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.35rem;
+    color: var(--accent);
+    cursor: pointer; white-space: nowrap;
+    text-decoration: none;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--text); }
+
+  .search-bar {
+    flex: 1; max-width: 520px; margin: 0 auto;
+    display: flex; align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50px; overflow: hidden;
+    transition: border-color .2s;
+  }
+  .search-bar:focus-within { border-color: var(--accent); }
+  .search-bar input {
+    flex: 1; border: none; background: transparent;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: .9rem; padding: .65rem 1.2rem;
+    outline: none;
+  }
+  .search-bar input::placeholder { color: var(--muted); }
+  .search-btn {
+    background: var(--accent); border: none; cursor: pointer;
+    padding: .65rem 1.1rem; color: #000; font-size: .85rem;
+    font-weight: 600; letter-spacing: .3px;
+    transition: background .2s;
+  }
+  .search-btn:hover { background: #ffb84d; }
+
+  .nav-actions { display: flex; align-items: center; gap: .75rem; margin-left: auto; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    border: none; border-radius: 50px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-weight: 500;
+    font-size: .85rem; padding: .55rem 1.1rem;
+    transition: all .2s; text-decoration: none;
+  }
+  .btn-ghost {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+  .btn-accent { background: var(--accent); color: #000; font-weight: 700; }
+  .btn-accent:hover { background: #ffb84d; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent; color: var(--accent2);
+    border: 1px solid var(--accent2);
+  }
+  .btn-outline:hover { background: rgba(45,212,191,.1); }
+  .btn-danger { background: var(--danger); color: #fff; font-weight: 600; }
+  .btn-surface { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-surface:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── HERO ────────────────────────────────────── */
+  .hero {
+    position: relative; overflow: hidden;
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% -10%, rgba(245,166,35,.13) 0%, transparent 65%),
+      radial-gradient(ellipse 45% 40% at 80% 60%, rgba(45,212,191,.08) 0%, transparent 60%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 70% 80% at 50% 0%, black 30%, transparent 100%);
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: rgba(245,166,35,.12); border: 1px solid rgba(245,166,35,.3);
+    color: var(--accent); border-radius: 50px; padding: .3rem .9rem;
+    font-size: .78rem; font-weight: 600; letter-spacing: .5px;
+    text-transform: uppercase; margin-bottom: 1.5rem;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 800; line-height: 1.1;
+    letter-spacing: -1.5px; margin-bottom: 1rem;
+  }
+  .hero h1 em { color: var(--accent); font-style: normal; }
+  .hero p {
+    color: var(--muted); font-size: 1.05rem;
+    line-height: 1.7; margin-bottom: 2rem;
+  }
+  .hero-ctas { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  .hero-stats {
+    display: flex; justify-content: center; gap: 3rem;
+    margin-top: 3rem; padding-top: 2.5rem;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem; font-weight: 800; color: var(--accent);
+    display: block;
+  }
+  .stat-label { font-size: .8rem; color: var(--muted); letter-spacing: .3px; }
+
+  /* ─── SECTION HEADER ─────────────────────────── */
+  .section-header {
+    display: flex; align-items: baseline;
+    justify-content: space-between;
+    padding: 0 2rem; margin-bottom: 1.5rem;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.25rem; font-weight: 700;
+  }
+  .section-title span { color: var(--accent); }
+  .see-all { color: var(--accent2); font-size: .85rem; cursor: pointer; }
+  .see-all:hover { text-decoration: underline; }
+
+  /* ─── CATEGORY GRID ──────────────────────────── */
+  .categories-section { padding: 2.5rem 0; }
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem; padding: 0 2rem;
+  }
+  .cat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1rem;
+    text-align: center; cursor: pointer;
+    transition: all .25s;
+    position: relative; overflow: hidden;
+  }
+  .cat-card::before {
+    content: '';
+    position: absolute; inset: 0; opacity: 0;
+    transition: opacity .25s;
+    border-radius: var(--radius);
+  }
+  .cat-card:hover { border-color: transparent; transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+  .cat-card:hover::before { opacity: 1; }
+
+  /* Category color themes */
+  .cat-ecommerce::before { background: linear-gradient(135deg, rgba(245,166,35,.15), rgba(245,166,35,.04)); }
+  .cat-ecommerce:hover { border-color: rgba(245,166,35,.3) !important; }
+  .cat-ecommerce .cat-icon { background: rgba(245,166,35,.15); color: var(--accent); }
+
+  .cat-housing::before { background: linear-gradient(135deg, rgba(45,212,191,.15), rgba(45,212,191,.04)); }
+  .cat-housing:hover { border-color: rgba(45,212,191,.3) !important; }
+  .cat-housing .cat-icon { background: rgba(45,212,191,.15); color: var(--accent2); }
+
+  .cat-carrental::before { background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(99,102,241,.04)); }
+  .cat-carrental:hover { border-color: rgba(99,102,241,.3) !important; }
+  .cat-carrental .cat-icon { background: rgba(99,102,241,.15); color: #818cf8; }
+
+  .cat-carsale::before { background: linear-gradient(135deg, rgba(236,72,153,.15), rgba(236,72,153,.04)); }
+  .cat-carsale:hover { border-color: rgba(236,72,153,.3) !important; }
+  .cat-carsale .cat-icon { background: rgba(236,72,153,.15); color: #f472b6; }
+
+  .cat-food::before { background: linear-gradient(135deg, rgba(34,197,94,.15), rgba(34,197,94,.04)); }
+  .cat-food:hover { border-color: rgba(34,197,94,.3) !important; }
+  .cat-food .cat-icon { background: rgba(34,197,94,.15); color: #4ade80; }
+
+  .cat-services::before { background: linear-gradient(135deg, rgba(251,146,60,.15), rgba(251,146,60,.04)); }
+  .cat-services:hover { border-color: rgba(251,146,60,.3) !important; }
+  .cat-services .cat-icon { background: rgba(251,146,60,.15); color: #fb923c; }
+
+  .cat-health::before { background: linear-gradient(135deg, rgba(244,63,94,.15), rgba(244,63,94,.04)); }
+  .cat-health:hover { border-color: rgba(244,63,94,.3) !important; }
+  .cat-health .cat-icon { background: rgba(244,63,94,.15); color: #fb7185; }
+
+  .cat-education::before { background: linear-gradient(135deg, rgba(168,85,247,.15), rgba(168,85,247,.04)); }
+  .cat-education:hover { border-color: rgba(168,85,247,.3) !important; }
+  .cat-education .cat-icon { background: rgba(168,85,247,.15); color: #c084fc; }
+
+  .cat-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin: 0 auto 1rem;
+    position: relative; z-index: 1;
+  }
+  .cat-name {
+    font-family: 'Syne', sans-serif;
+    font-size: .9rem; font-weight: 700;
+    position: relative; z-index: 1; margin-bottom: .2rem;
+  }
+  .cat-count { font-size: .75rem; color: var(--muted); position: relative; z-index: 1; }
+
+  /* ─── FEATURED BUSINESSES ────────────────────── */
+  .featured-section { padding: 2.5rem 0; }
+  .biz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem; padding: 0 2rem;
+  }
+  .biz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden; cursor: pointer;
+    transition: all .25s;
+  }
+  .biz-card:hover { border-color: rgba(245,166,35,.35); transform: translateY(-3px); box-shadow: 0 20px 48px rgba(0,0,0,.45); }
+
+  .biz-cover {
+    height: 140px; position: relative; overflow: hidden;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.5rem;
+  }
+  .biz-cover-ecom { background: linear-gradient(135deg, #1a1200, #2d1f00); }
+  .biz-cover-house { background: linear-gradient(135deg, #001a19, #002d2b); }
+  .biz-cover-car   { background: linear-gradient(135deg, #0f0020, #1a0035); }
+  .biz-cover-food  { background: linear-gradient(135deg, #001a08, #002d10); }
+
+  .biz-badge {
+    position: absolute; top: .75rem; right: .75rem;
+    background: rgba(0,0,0,.6); backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 50px; padding: .2rem .65rem;
+    font-size: .7rem; font-weight: 600; color: var(--accent2);
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+  .sponsored-badge {
+    position: absolute; top: .75rem; left: .75rem;
+    background: rgba(245,166,35,.2); backdrop-filter: blur(8px);
+    border: 1px solid rgba(245,166,35,.4);
+    border-radius: 50px; padding: .2rem .65rem;
+    font-size: .7rem; font-weight: 600; color: var(--accent);
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+
+  .biz-body { padding: 1rem 1.1rem 1.2rem; }
+  .biz-meta { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; }
+  .biz-cat-tag {
+    font-size: .7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .4px; color: var(--accent); background: rgba(245,166,35,.1);
+    border-radius: 50px; padding: .15rem .6rem;
+  }
+  .biz-rating {
+    font-size: .75rem; color: var(--accent); margin-left: auto;
+    display: flex; align-items: center; gap: .2rem;
+  }
+  .biz-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700; margin-bottom: .3rem;
+  }
+  .biz-tagline { font-size: .82rem; color: var(--muted); line-height: 1.5; margin-bottom: .9rem; }
+  .biz-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border); padding-top: .75rem;
+  }
+  .biz-location { font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: .3rem; }
+  .biz-cta {
+    font-size: .78rem; font-weight: 600; color: var(--accent2);
+    background: rgba(45,212,191,.08); border: 1px solid rgba(45,212,191,.25);
+    border-radius: 50px; padding: .3rem .8rem; cursor: pointer; transition: all .2s;
+  }
+  .biz-cta:hover { background: rgba(45,212,191,.18); }
+
+  /* ─── ADD BUSINESS BANNER ────────────────────── */
+  .add-banner {
+    margin: 2rem 2rem; border-radius: var(--radius);
+    background: linear-gradient(135deg, #13171f 0%, #1c2230 100%);
+    border: 1px solid var(--border);
+    padding: 2rem 2.5rem;
+    display: flex; align-items: center; gap: 2rem;
+    position: relative; overflow: hidden;
+  }
+  .add-banner::before {
+    content: '';
+    position: absolute; right: -60px; top: -60px;
+    width: 220px; height: 220px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,166,35,.12) 0%, transparent 70%);
+  }
+  .banner-icon {
+    font-size: 2.5rem; flex-shrink: 0;
+    width: 64px; height: 64px; border-radius: 18px;
+    background: rgba(245,166,35,.12); border: 1px solid rgba(245,166,35,.25);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .banner-text { flex: 1; position: relative; z-index: 1; }
+  .banner-text h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem; font-weight: 800; margin-bottom: .35rem;
+  }
+  .banner-text p { font-size: .85rem; color: var(--muted); line-height: 1.6; }
+  .banner-actions { display: flex; flex-direction: column; gap: .5rem; align-items: flex-end; position: relative; z-index: 1; }
+
+  /* ─── CATEGORY DETAIL SCREEN ─────────────────── */
+  .cat-hero {
+    padding: 2rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+  }
+  .cat-hero-icon {
+    width: 64px; height: 64px; border-radius: 18px;
+    background: rgba(245,166,35,.15); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+  }
+  .cat-hero-info h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem; font-weight: 800;
+  }
+  .cat-hero-info p { color: var(--muted); font-size: .9rem; margin-top: .25rem; }
+  .cat-hero-actions { margin-left: auto; display: flex; gap: .75rem; }
+
+  .filters-bar {
+    padding: 1rem 2rem;
+    display: flex; align-items: center; gap: .6rem;
+    border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .filter-chip {
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--muted); border-radius: 50px; padding: .35rem .9rem;
+    font-size: .8rem; cursor: pointer; transition: all .2s;
+  }
+  .filter-chip:hover, .filter-chip.active {
+    border-color: var(--accent); color: var(--accent);
+    background: rgba(245,166,35,.08);
+  }
+  .filter-label { font-size: .82rem; color: var(--muted); margin-right: .25rem; }
+
+  .listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1.25rem; padding: 1.5rem 2rem;
+  }
+
+  /* ─── BUSINESS PROFILE SCREEN ────────────────── */
+  .profile-cover {
+    height: 220px; background: linear-gradient(135deg, #1a1200, #2d1f00);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem;
+  }
+  .profile-cover-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+    background: linear-gradient(transparent, var(--bg));
+  }
+  .profile-header {
+    padding: 0 2rem 1.5rem;
+    display: flex; align-items: flex-end; gap: 1.5rem;
+    margin-top: -1.5rem; position: relative; z-index: 1;
+    border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .profile-avatar {
+    width: 80px; height: 80px; border-radius: 20px;
+    background: var(--surface); border: 3px solid var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; flex-shrink: 0;
+  }
+  .profile-meta h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem; font-weight: 800;
+  }
+  .profile-sub {
+    display: flex; align-items: center; gap: 1rem;
+    margin-top: .4rem; flex-wrap: wrap;
+  }
+  .profile-sub span { font-size: .82rem; color: var(--muted); display: flex; align-items: center; gap: .3rem; }
+  .verified-badge { color: var(--accent2) !important; font-weight: 600; }
+  .profile-actions { margin-left: auto; display: flex; gap: .75rem; align-items: center; }
+
+  .profile-body {
+    display: grid; grid-template-columns: 1fr 320px; gap: 2rem;
+    padding: 2rem; align-items: start;
+  }
+  @media (max-width: 768px) { .profile-body { grid-template-columns: 1fr; } }
+
+  .profile-section { margin-bottom: 2rem; }
+  .profile-section h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    margin-bottom: 1rem; color: var(--text);
+    padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  }
+  .profile-desc { color: var(--muted); line-height: 1.75; font-size: .9rem; }
+
+  .gallery-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem;
+  }
+  .gallery-item {
+    aspect-ratio: 1; border-radius: var(--radius-sm);
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; cursor: pointer; transition: all .2s;
+  }
+  .gallery-item:hover { transform: scale(1.03); border-color: var(--accent); }
+  .gallery-item.large { grid-column: span 2; grid-row: span 2; font-size: 2.5rem; }
+
+  .contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem;
+    position: sticky; top: 84px;
+  }
+  .contact-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700; margin-bottom: 1.2rem;
+  }
+  .contact-row {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .7rem 0; border-bottom: 1px solid var(--border);
+    font-size: .88rem;
+  }
+  .contact-row:last-of-type { border-bottom: none; }
+  .contact-icon { color: var(--accent); width: 18px; text-align: center; }
+  .contact-val { color: var(--text); }
+  .contact-lbl { font-size: .75rem; color: var(--muted); }
+  .contact-ctas { margin-top: 1.2rem; display: flex; flex-direction: column; gap: .6rem; }
+  .plan-badge {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(245,166,35,.06); border: 1px solid rgba(245,166,35,.2);
+    border-radius: var(--radius-sm); padding: .75rem 1rem;
+    font-size: .8rem; margin-top: 1rem;
+  }
+  .plan-badge span:first-child { color: var(--muted); }
+  .plan-badge span:last-child { color: var(--accent); font-weight: 700; }
+
+  /* ─── ADD BUSINESS / PAYMENT SCREEN ─────────────────── */
+  .form-screen { padding: 2rem; max-width: 720px; margin: 0 auto; }
+  .form-screen h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem; font-weight: 800; margin-bottom: .4rem;
+  }
+  .form-screen > p { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+
+  .form-steps {
+    display: flex; gap: 0; margin-bottom: 2.5rem;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .form-step {
+    flex: 1; padding: .85rem; text-align: center;
+    border-right: 1px solid var(--border); background: var(--surface);
+    font-size: .8rem; font-weight: 600; color: var(--muted);
+    position: relative;
+  }
+  .form-step:last-child { border-right: none; }
+  .form-step.active { background: rgba(245,166,35,.1); color: var(--accent); }
+  .form-step.done { color: var(--accent2); }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--surface2); font-size: .72rem;
+    margin-bottom: .3rem; font-weight: 700;
+  }
+  .form-step.active .step-num { background: var(--accent); color: #000; }
+  .form-step.done .step-num { background: var(--accent2); color: #000; }
+
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.8rem;
+    margin-bottom: 1.2rem;
+  }
+  .form-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700; margin-bottom: 1.2rem;
+  }
+  .form-row { display: grid; gap: 1rem; margin-bottom: 1rem; }
+  .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: .45rem; }
+  .form-group label { font-size: .8rem; font-weight: 600; color: var(--muted); letter-spacing: .3px; }
+  .form-group input, .form-group select, .form-group textarea {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: var(--radius-sm);
+    padding: .7rem 1rem; font-family: 'DM Sans', sans-serif;
+    font-size: .9rem; outline: none; transition: border-color .2s;
+    resize: vertical;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent);
+  }
+  .form-group input::placeholder, .form-group textarea::placeholder { color: var(--muted); }
+  .form-group select option { background: var(--surface2); }
+
+  .plan-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.2rem; }
+  .plan-option {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.2rem; cursor: pointer; transition: all .2s;
+    background: var(--surface2); text-align: center;
+  }
+  .plan-option:hover { border-color: var(--accent); }
+  .plan-option.selected { border-color: var(--accent); background: rgba(245,166,35,.07); }
+  .plan-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: .95rem; margin-bottom: .3rem;
+  }
+  .plan-price { font-size: 1.3rem; font-weight: 800; color: var(--accent); margin-bottom: .3rem; }
+  .plan-price small { font-size: .7rem; color: var(--muted); font-weight: 400; }
+  .plan-feat { font-size: .75rem; color: var(--muted); line-height: 1.5; }
+  .plan-option.selected .plan-name { color: var(--accent); }
+
+  .payment-methods { display: flex; gap: .75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .pay-method {
+    flex: 1; min-width: 100px; border: 1px solid var(--border);
+    background: var(--bg); border-radius: var(--radius-sm);
+    padding: .75rem; text-align: center; cursor: pointer;
+    font-size: .82rem; font-weight: 600; color: var(--muted);
+    transition: all .2s;
+  }
+  .pay-method:hover, .pay-method.active { border-color: var(--accent); color: var(--accent); background: rgba(245,166,35,.06); }
+  .pay-method .pay-icon { font-size: 1.3rem; display: block; margin-bottom: .3rem; }
+
+  .summary-row {
+    display: flex; justify-content: space-between;
+    font-size: .88rem; padding: .5rem 0; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-total {
+    font-weight: 700; color: var(--text); font-size: 1rem;
+  }
+  .summary-total span:last-child { color: var(--accent); font-size: 1.1rem; }
+
+  .form-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+  /* ─── ADMIN SCREEN ────────────────────────────── */
+  .admin-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 64px); }
+  .admin-sidebar {
+    background: var(--surface); border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+  }
+  .admin-nav-item {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .75rem 1.5rem; font-size: .88rem; font-weight: 500;
+    color: var(--muted); cursor: pointer; transition: all .2s;
+    border-left: 2px solid transparent;
+  }
+  .admin-nav-item:hover { color: var(--text); background: rgba(255,255,255,.03); }
+  .admin-nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(245,166,35,.06); }
+  .admin-nav-section {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .8px; color: var(--muted); padding: 1.2rem 1.5rem .4rem;
+  }
+  .admin-main { padding: 2rem; overflow-y: auto; }
+  .admin-main h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem;
+  }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.25rem;
+  }
+  .kpi-label { font-size: .75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: .5rem; }
+  .kpi-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem; font-weight: 800; margin-bottom: .25rem;
+  }
+  .kpi-delta { font-size: .75rem; }
+  .kpi-delta.up { color: #4ade80; }
+  .kpi-delta.down { color: var(--danger); }
+
+  .pending-table { width: 100%; border-collapse: collapse; }
+  .pending-table th {
+    text-align: left; font-size: .75rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .4px; color: var(--muted);
+    padding: .75rem 1rem; background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .pending-table td {
+    padding: .85rem 1rem; font-size: .88rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .pending-table tr:hover td { background: rgba(255,255,255,.02); }
+  .status-pill {
+    display: inline-block; border-radius: 50px;
+    padding: .2rem .7rem; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;
+  }
+  .status-pending { background: rgba(251,146,60,.15); color: #fb923c; }
+  .status-active  { background: rgba(74,222,128,.15); color: #4ade80; }
+  .status-review  { background: rgba(99,102,241,.15); color: #818cf8; }
+
+  .table-action {
+    font-size: .78rem; font-weight: 600; cursor: pointer;
+    padding: .28rem .7rem; border-radius: 50px;
+    border: none; transition: all .2s;
+  }
+  .ta-approve { background: rgba(74,222,128,.15); color: #4ade80; margin-right: .35rem; }
+  .ta-approve:hover { background: rgba(74,222,128,.3); }
+  .ta-reject { background: rgba(255,77,109,.1); color: var(--danger); }
+  .ta-reject:hover { background: rgba(255,77,109,.25); }
+  .ta-view { background: var(--surface2); color: var(--muted); }
+  .ta-view:hover { color: var(--text); }
+
+  /* ─── TOAST ───────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 1rem 1.4rem;
+    font-size: .88rem; box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    display: none; align-items: center; gap: .75rem;
+    animation: slideUp .3s ease;
+  }
+  .toast.show { display: flex; }
+  .toast-icon { font-size: 1.2rem; }
+  .toast-msg { flex: 1; }
+  .toast-close { color: var(--muted); cursor: pointer; font-size: 1.1rem; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── MODAL ───────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 2rem; max-width: 420px; width: 100%;
+    animation: fadeIn .25s ease;
+  }
+  .modal h3 { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 800; margin-bottom: .5rem; }
+  .modal p { color: var(--muted); font-size: .88rem; line-height: 1.6; margin-bottom: 1.4rem; }
+  .modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
+
+  /* ─── BREADCRUMB ─────────────────────────────── */
+  .breadcrumb {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .9rem 2rem; font-size: .82rem; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .breadcrumb span { cursor: pointer; }
+  .breadcrumb span:hover { color: var(--accent); }
+  .breadcrumb .sep { color: var(--border); }
+  .breadcrumb .current { color: var(--text); cursor: default; }
+
+  /* ─── RESPONSIVE ─────────────────────────────── */
+  @media (max-width: 640px) {
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .plan-selector { grid-template-columns: 1fr; }
+    .form-row.cols-2 { grid-template-columns: 1fr; }
+    .add-banner { flex-direction: column; align-items: flex-start; }
+    .banner-actions { align-items: flex-start; }
+    .admin-layout { grid-template-columns: 1fr; }
+    .admin-sidebar { display: none; }
+    .profile-body { grid-template-columns: 1fr; }
+  }
+
+  /* ─── UTILITY ────────────────────────────────── */
+  .full-btn { width: 100%; justify-content: center; border-radius: var(--radius-sm); padding: .8rem; }
+  .mt-1 { margin-top: .5rem; }
+  .tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 50px; padding: .2rem .7rem; font-size: .75rem; color: var(--muted); margin: .2rem; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ TOP BAR -->
+<nav class="topbar">
+  <a class="logo" onclick="showScreen('home')">Biz<span>Hub</span></a>
+  <div class="search-bar">
+    <input type="text" placeholder="Search businesses, categories…" id="searchInput">
+    <button class="search-btn" onclick="handleSearch()">Search</button>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-ghost" onclick="showScreen('admin')">⚙ Admin</button>
+    <button class="btn btn-accent" onclick="showScreen('add-business')">＋ List Business</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════ SCREEN: HOME -->
+<div class="screen active" id="screen-home">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-badge">🌍 Kenya's #1 Business Directory</div>
+      <h1>Find &amp; Promote <em>Any Business</em> In One Place</h1>
+      <p>Browse thousands of verified local businesses — from e-commerce stores and car dealers to rental properties and restaurants. Or list your own today.</p>
+      <div class="hero-ctas">
+        <button class="btn btn-accent" style="padding:.7rem 1.6rem;font-size:.95rem;" onclick="document.querySelector('.categories-section').scrollIntoView({behavior:'smooth'})">Browse Categories</button>
+        <button class="btn btn-outline" style="padding:.7rem 1.6rem;font-size:.95rem;" onclick="showScreen('add-business')">List Your Business</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><span class="stat-num">4,200+</span><span class="stat-label">Businesses Listed</span></div>
+        <div class="stat-item"><span class="stat-num">8</span><span class="stat-label">Categories</span></div>
+        <div class="stat-item"><span class="stat-num">47 Cities</span><span class="stat-label">Coverage</span></div>
+        <div class="stat-item"><span class="stat-num">12k+</span><span class="stat-label">Monthly Visitors</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories -->
+  <div class="categories-section">
+    <div class="section-header">
+      <h2 class="section-title">Browse <span>Categories</span></h2>
+      <span class="see-all">View all →</span>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-card cat-ecommerce" onclick="showCategory('ecommerce')">
+        <div class="cat-icon">🛒</div>
+        <div class="cat-name">E-Commerce</div>
+        <div class="cat-count">312 businesses</div>
+      </div>
+      <div class="cat-card cat-housing" onclick="showCategory('housing')">
+        <div class="cat-icon">🏠</div>
+        <div class="cat-name">Housing & Real Estate</div>
+        <div class="cat-count">184 listings</div>
+      </div>
+      <div class="cat-card cat-carrental" onclick="showCategory('car-rental')">
+        <div class="cat-icon">🚗</div>
+        <div class="cat-name">Car Rental</div>
+        <div class="cat-count">97 providers</div>
+      </div>
+      <div class="cat-card cat-carsale" onclick="showCategory('car-sale')">
+        <div class="cat-icon">🚙</div>
+        <div class="cat-name">Car Sales</div>
+        <div class="cat-count">530 vehicles</div>
+      </div>
+      <div class="cat-card cat-food" onclick="showCategory('food')">
+        <div class="cat-icon">🍽️</div>
+        <div class="cat-name">Food & Dining</div>
+        <div class="cat-count">221 restaurants</div>
+      </div>
+      <div class="cat-card cat-services" onclick="showCategory('services')">
+        <div class="cat-icon">🔧</div>
+        <div class="cat-name">Services & Repair</div>
+        <div class="cat-count">178 providers</div>
+      </div>
+      <div class="cat-card cat-health" onclick="showCategory('health')">
+        <div class="cat-icon">💊</div>
+        <div class="cat-name">Health & Wellness</div>
+        <div class="cat-count">143 clinics</div>
+      </div>
+      <div class="cat-card cat-education" onclick="showCategory('education')">
+        <div class="cat-icon">📚</div>
+        <div class="cat-name">Education</div>
+        <div class="cat-count">89 institutions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured Businesses -->
+  <div class="featured-section">
+    <div class="section-header">
+      <h2 class="section-title">Featured <span>Businesses</span></h2>
+      <span class="see-all">See all →</span>
+    </div>
+    <div class="biz-grid">
+      <!-- Card 1 -->
+      <div class="biz-card" onclick="showBusiness('shoptech')">
+        <div class="biz-cover biz-cover-ecom">🛍️
+          <div class="sponsored-badge">★ Sponsored</div>
+          <div class="biz-badge">E-Commerce</div>
+        </div>
+        <div class="biz-body">
+          <div class="biz-meta">
+            <span class="biz-cat-tag">Online Shop</span>
+            <span class="biz-rating">★ 4.8 <span style="color:var(--muted)">(132)</span></span>
+          </div>
+          <div class="biz-name">ShopTech Kenya</div>
+          <div class="biz-tagline">Premium electronics &amp; gadgets delivered to your doorstep nationwide.</div>
+          <div class="biz-footer">
+            <span class="biz-location">📍 Nairobi CBD</span>
+            <span class="biz-cta">View Store →</span>
+          </div>
+        </div>
+      </div>
+      <!-- Card 2 -->
+      <div class="biz-card" onclick="showBusiness('luxliving')">
+        <div class="biz-cover biz-cover-house">🏡
+          <div class="biz-badge">Housing</div>
+        </div>
+        <div class="biz-body">
+          <div class="biz-meta">
+            <span class="biz-cat-tag">Real Estate</span>
+            <span class="biz-rating">★ 4.6 <span style="color:var(--muted)">(87)</span></span>
+          </div>
+          <div class="biz-name">LuxLiving Properties</div>
+          <div class="biz-tagline">Modern apartments and family homes for rent &amp; sale across Nairobi.</div>
+          <div class="biz-footer">
+            <span class="biz-location">📍 Westlands, NBI</span>
+            <span class="biz-cta">View Listings →</span>
+          </div>
+        </div>
+      </div>
+      <!-- Card 3 -->
+      <div class="biz-card" onclick="showBusiness('swiftwheels')">
+        <div class="biz-cover biz-cover-car">🚗
+          <div class="sponsored-badge">★ Sponsored</div>
+          <div class="biz-badge">Car Rental</div>
+        </div>
+        <div class="biz-body">
+          <div class="biz-meta">
+            <span class="biz-cat-tag">Car Rental</span>
+            <span class="biz-rating">★ 4.9 <span style="color:var(--muted)">(204)</span></span>
+          </div>
+          <div class="biz-name">SwiftWheels Kenya</div>
+          <div class="biz-tagline">Affordable daily, weekly &amp; monthly car hire. 200+ fleet, self-drive available.</div>
+          <div class="biz-footer">
+            <span class="biz-location">📍 Kilimani, NBI</span>
+            <span class="biz-cta">Book Now →</span>
+          </div>
+        </div>
+      </div>
+      <!-- Card 4 -->
+      <div class="biz-card" onclick="showBusiness('mamakitchen')">
+        <div class="biz-cover biz-cover-food">🍲
+          <div class="biz-badge">Food</div>
+        </div>
+        <div class="biz-body">
+          <div class="biz-meta">
+            <span class="biz-cat-tag">Restaurant</span>
+            <span class="biz-rating">★ 4.7 <span style="color:var(--muted)">(311)</span></span>
+          </div>
+          <div class="biz-name">Mama's Kitchen</div>
+          <div class="biz-tagline">Authentic Kenyan home cooking. Breakfast, lunch &amp; dinner. Catering available.</div>
+          <div class="biz-footer">
+            <span class="biz-location">📍 Ngong Road</span>
+            <span class="biz-cta">See Menu →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Business Banner -->
+  <div class="add-banner">
+    <div class="banner-icon">📢</div>
+    <div class="banner-text">
+      <h3>Ready to Grow Your Business?</h3>
+      <p>Join 4,200+ businesses already advertising on BizHub. Get discovered by thousands of local customers every month. Plans start at KES 999/mo.</p>
+    </div>
+    <div class="banner-actions">
+      <button class="btn btn-accent" onclick="showScreen('add-business')">List Your Business</button>
+      <button class="btn btn-ghost" onclick="showModal('pricing')">View Pricing</button>
+    </div>
+  </div>
+
+</div><!-- /screen-home -->
+
+<!-- ═══════════════════════════════════════ SCREEN: CATEGORY DETAIL -->
+<div class="screen" id="screen-category">
+
+  <div class="breadcrumb">
+    <span onclick="showScreen('home')">Home</span>
+    <span class="sep">/</span>
+    <span class="current" id="cat-breadcrumb">E-Commerce</span>
+  </div>
+
+  <div class="cat-hero">
+    <div class="cat-hero-icon" id="cat-detail-icon">🛒</div>
+    <div class="cat-hero-info">
+      <h2 id="cat-detail-name">E-Commerce Businesses</h2>
+      <p id="cat-detail-desc">312 registered businesses · Updated today</p>
+    </div>
+    <div class="cat-hero-actions">
+      <button class="btn btn-surface">Sort ↕</button>
+      <button class="btn btn-accent" onclick="showScreen('add-business')">＋ Add Your Business</button>
+    </div>
+  </div>
+
+  <div class="filters-bar">
+    <span class="filter-label">Filter:</span>
+    <span class="filter-chip active">All</span>
+    <span class="filter-chip">Sponsored</span>
+    <span class="filter-chip">Verified ✓</span>
+    <span class="filter-chip">Top Rated ★</span>
+    <span class="filter-chip">Nairobi</span>
+    <span class="filter-chip">Mombasa</span>
+    <span class="filter-chip">Kisumu</span>
+  </div>
+
+  <div class="listings-grid">
+    <!-- Listing cards (same style as featured) -->
+    <div class="biz-card" onclick="showBusiness('shoptech')">
+      <div class="biz-cover biz-cover-ecom">🛍️
+        <div class="sponsored-badge">★ Sponsored</div>
+        <div class="biz-badge">E-Commerce</div>
+      </div>
+      <div class="biz-body">
+        <div class="biz-meta"><span class="biz-cat-tag">Online Shop</span><span class="biz-rating">★ 4.8</span></div>
+        <div class="biz-name">ShopTech Kenya</div>
+        <div class="biz-tagline">Premium electronics &amp; gadgets delivered nationwide.</div>
+        <div class="biz-footer"><span class="biz-location">📍 Nairobi CBD</span><span class="biz-cta">View →</span></div>
+      </div>
+    </div>
+    <div class="biz-card" onclick="showBusiness('shoptech')">
+      <div class="biz-cover" style="background:linear-gradient(135deg,#0d1a00,#1a2d00);">👗
+        <div class="biz-badge">Fashion</div>
+      </div>
+      <div class="biz-body">
+        <div class="biz-meta"><span class="biz-cat-tag">Clothing</span><span class="biz-rating">★ 4.5</span></div>
+        <div class="biz-name">StyleHouse KE</div>
+        <div class="biz-tagline">Trendy fashion for men &amp; women. Nationwide delivery.</div>
+        <div class="biz-footer"><span class="biz-location">📍 Westlands</span><span class="biz-cta">View →</span></div>
+      </div>
+    </div>
+    <div class="biz-card" onclick="showBusiness('shoptech')">
+      <div class="biz-cover" style="background:linear-gradient(135deg,#001020,#001a35);">📱
+        <div class="biz-badge">Electronics</div>
+      </div>
+      <div class="biz-body">
+        <div class="biz-meta"><span class="biz-cat-tag">Gadgets</span><span class="biz-rating">★ 4.3</span></div>
+        <div class="biz-name">GadgetZone</div>
+        <div class="biz-tagline">Phones, accessories &amp; smart home devices at best prices.</div>
+        <div class="biz-footer"><span class="biz-location">📍 Mombasa</span><span class="biz-cta">View →</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /screen-category -->
+
+<!-- ═══════════════════════════════════ SCREEN: BUSINESS PROFILE -->
+<div class="screen" id="screen-business">
+
+  <div class="breadcrumb">
+    <span onclick="showScreen('home')">Home</span>
+    <span class="sep">/</span>
+    <span onclick="showScreen('category')">E-Commerce</span>
+    <span class="sep">/</span>
+    <span class="current">SwiftWheels Kenya</span>
+  </div>
+
+  <div class="profile-cover">🚗
+    <div class="profile-cover-overlay"></div>
+  </div>
+
+  <div class="profile-header">
+    <div class="profile-avatar">🚗</div>
+    <div class="profile-meta">
+      <h2>SwiftWheels Kenya</h2>
+      <div class="profile-sub">
+        <span class="verified-badge">✓ Verified Business</span>
+        <span>🚗 Car Rental</span>
+        <span>📍 Kilimani, Nairobi</span>
+        <span>★ 4.9 (204 reviews)</span>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <button class="btn btn-ghost">♡ Save</button>
+      <button class="btn btn-ghost">⎘ Share</button>
+      <button class="btn btn-accent">📞 Contact Now</button>
+    </div>
+  </div>
+
+  <div class="profile-body">
+    <div>
+      <!-- About -->
+      <div class="profile-section">
+        <h3>About This Business</h3>
+        <p class="profile-desc">SwiftWheels Kenya is Nairobi's fastest growing car hire company, offering affordable and reliable vehicle rental services for individuals, corporates, and tourists. With a modern fleet of 200+ vehicles ranging from economy sedans to luxury SUVs, we make getting around Kenya effortless.</p>
+        <p class="profile-desc" style="margin-top:.75rem">We offer daily, weekly, and monthly rental packages, with optional chauffeur services and airport transfers available 24/7.</p>
+        <div style="margin-top:1rem">
+          <span class="tag">Self-drive</span><span class="tag">Chauffeur</span><span class="tag">Airport Transfer</span><span class="tag">Corporate Hire</span><span class="tag">Long-term Lease</span><span class="tag">SUVs</span>
+        </div>
+      </div>
+
+      <!-- Gallery -->
+      <div class="profile-section">
+        <h3>Gallery / Portfolio</h3>
+        <div class="gallery-grid">
+          <div class="gallery-item large">🚙</div>
+          <div class="gallery-item">🏎️</div>
+          <div class="gallery-item">🚕</div>
+          <div class="gallery-item">🚌</div>
+          <div class="gallery-item">🛻</div>
+        </div>
+      </div>
+
+      <!-- Packages -->
+      <div class="profile-section">
+        <h3>Packages &amp; Pricing</h3>
+        <div style="display:grid;gap:.75rem">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:700;margin-bottom:.2rem">Economy Package</div><div style="font-size:.8rem;color:var(--muted)">Toyota Vitz · up to 150km/day</div></div>
+            <div style="color:var(--accent);font-weight:800;font-size:1.1rem">KES 3,500<small style="font-size:.75rem;font-weight:400;color:var(--muted)">/day</small></div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid rgba(245,166,35,.3);border-radius:var(--radius-sm);padding:1rem;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:700;margin-bottom:.2rem">SUV Premium <span style="font-size:.72rem;background:rgba(245,166,35,.15);color:var(--accent);padding:.1rem .5rem;border-radius:50px;margin-left:.3rem">Popular</span></div><div style="font-size:.8rem;color:var(--muted)">Toyota Prado · unlimited km</div></div>
+            <div style="color:var(--accent);font-weight:800;font-size:1.1rem">KES 9,000<small style="font-size:.75rem;font-weight:400;color:var(--muted)">/day</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Contact Card -->
+    <div>
+      <div class="contact-card">
+        <h3>Contact &amp; Info</h3>
+        <div class="contact-row"><span class="contact-icon">📞</span><div><div class="contact-val">+254 712 345 678</div><div class="contact-lbl">Phone</div></div></div>
+        <div class="contact-row"><span class="contact-icon">✉️</span><div><div class="contact-val">info@swiftwheels.co.ke</div><div class="contact-lbl">Email</div></div></div>
+        <div class="contact-row"><span class="contact-icon">🌐</span><div><div class="contact-val">www.swiftwheels.co.ke</div><div class="contact-lbl">Website</div></div></div>
+        <div class="contact-row"><span class="contact-icon">⏰</span><div><div class="contact-val">Mon–Sun: 6am – 10pm</div><div class="contact-lbl">Working Hours</div></div></div>
+        <div class="contact-row"><span class="contact-icon">📍</span><div><div class="contact-val">Ngong Rd, Kilimani, Nairobi</div><div class="contact-lbl">Location</div></div></div>
+        <div class="contact-ctas">
+          <button class="btn btn-accent full-btn">📞 Call Now</button>
+          <button class="btn btn-outline full-btn">💬 WhatsApp</button>
+          <button class="btn btn-ghost full-btn">📍 Get Directions</button>
+        </div>
+        <div class="plan-badge">
+          <span>Listing Plan</span><span>★ Premium</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /screen-business -->
+
+<!-- ══════════════════════════════════ SCREEN: ADD BUSINESS / PAYMENT -->
+<div class="screen" id="screen-add-business">
+  <div class="form-screen">
+    <h2>List Your Business</h2>
+    <p>Fill in the details below. Your listing goes live after payment is confirmed and admin approves it.</p>
+
+    <!-- Steps -->
+    <div class="form-steps">
+      <div class="form-step done"><div class="step-num">✓</div><div>Business Info</div></div>
+      <div class="form-step active"><div class="step-num">2</div><div>Choose Plan</div></div>
+      <div class="form-step"><div class="step-num">3</div><div>Payment</div></div>
+      <div class="form-step"><div class="step-num">4</div><div>Review</div></div>
+    </div>
+
+    <!-- Business Info -->
+    <div class="form-card">
+      <h3>📋 Business Information</h3>
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Business Name *</label>
+          <input type="text" placeholder="e.g. SwiftWheels Kenya">
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <select>
+            <option>Select a category…</option>
+            <option>E-Commerce</option>
+            <option>Housing &amp; Real Estate</option>
+            <option>Car Rental</option>
+            <option>Car Sales</option>
+            <option>Food &amp; Dining</option>
+            <option>Services &amp; Repair</option>
+            <option>Health &amp; Wellness</option>
+            <option>Education</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Business Description *</label>
+          <textarea rows="3" placeholder="Describe your business, what you offer, and why customers should choose you…"></textarea>
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" placeholder="+254 7xx xxx xxx">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" placeholder="your@business.com">
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Website / Social Link</label>
+          <input type="url" placeholder="https://…">
+        </div>
+        <div class="form-group">
+          <label>Location / City *</label>
+          <input type="text" placeholder="e.g. Westlands, Nairobi">
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan Selection -->
+    <div class="form-card">
+      <h3>📦 Choose Your Plan</h3>
+      <div class="plan-selector">
+        <div class="plan-option" onclick="selectPlan(this)">
+          <div class="plan-name">Basic</div>
+          <div class="plan-price">KES 999<small>/mo</small></div>
+          <div class="plan-feat">Listing card · 2 photos · Phone &amp; email display</div>
+        </div>
+        <div class="plan-option selected" onclick="selectPlan(this)">
+          <div class="plan-name">⭐ Standard</div>
+          <div class="plan-price">KES 2,499<small>/mo</small></div>
+          <div class="plan-feat">Featured placement · 10 photos · Priority in search · Analytics</div>
+        </div>
+        <div class="plan-option" onclick="selectPlan(this)">
+          <div class="plan-name">👑 Premium</div>
+          <div class="plan-price">KES 5,999<small>/mo</small></div>
+          <div class="plan-feat">Sponsored badge · Unlimited media · Top category spot · Dedicated support</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="form-card">
+      <h3>💳 Payment</h3>
+      <div class="payment-methods">
+        <div class="pay-method active"><span class="pay-icon">📱</span>M-Pesa</div>
+        <div class="pay-method"><span class="pay-icon">💳</span>Card</div>
+        <div class="pay-method"><span class="pay-icon">🏦</span>Bank Transfer</div>
+        <div class="pay-method"><span class="pay-icon">💰</span>Airtel Money</div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>M-Pesa Phone Number</label>
+          <input type="tel" placeholder="07xx xxx xxx">
+        </div>
+        <div class="form-group">
+          <label>Business Owner Name</label>
+          <input type="text" placeholder="Full name as on M-Pesa">
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-top:.5rem">
+        <div class="summary-row"><span>Standard Plan (1 month)</span><span>KES 2,499</span></div>
+        <div class="summary-row"><span>Setup Fee (once)</span><span>KES 0</span></div>
+        <div class="summary-row"><span>VAT (16%)</span><span>KES 400</span></div>
+        <div class="summary-row summary-total"><span>Total Due</span><span>KES 2,899</span></div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="showScreen('home')">Cancel</button>
+      <button class="btn btn-accent" style="padding:.75rem 2rem" onclick="submitBusiness()">Pay &amp; Submit Listing →</button>
+    </div>
+  </div>
+</div><!-- /screen-add-business -->
+
+<!-- ═══════════════════════════════════════════ SCREEN: ADMIN PANEL -->
+<div class="screen" id="screen-admin">
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-nav-section">Overview</div>
+      <div class="admin-nav-item active">📊 Dashboard</div>
+      <div class="admin-nav-item">🕐 Pending Approvals</div>
+      <div class="admin-nav-item">✅ Active Listings</div>
+      <div class="admin-nav-section">Management</div>
+      <div class="admin-nav-item">📁 Categories</div>
+      <div class="admin-nav-item">💰 Payments</div>
+      <div class="admin-nav-item">👥 Users</div>
+      <div class="admin-nav-section">Settings</div>
+      <div class="admin-nav-item">⚙️ Site Settings</div>
+      <div class="admin-nav-item">🚪 Logout</div>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <h2>Admin Dashboard</h2>
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Listings</div>
+          <div class="kpi-val">4,218</div>
+          <div class="kpi-delta up">↑ +23 this week</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Pending Approval</div>
+          <div class="kpi-val" style="color:var(--accent)">14</div>
+          <div class="kpi-delta" style="color:var(--muted)">Awaiting review</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Monthly Revenue</div>
+          <div class="kpi-val">KES 412k</div>
+          <div class="kpi-delta up">↑ +18% vs last month</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active Users</div>
+          <div class="kpi-val">1,840</div>
+          <div class="kpi-delta up">↑ +5% this week</div>
+        </div>
+      </div>
+
+      <!-- Pending Table -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:2rem">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <h3 style="font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700">⏳ Pending Approvals</h3>
+          <span style="font-size:.78rem;color:var(--accent)">14 pending</span>
+        </div>
+        <table class="pending-table">
+          <thead>
+            <tr>
+              <th>Business</th>
+              <th>Category</th>
+              <th>Owner</th>
+              <th>Plan</th>
+              <th>Submitted</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>SwiftWheels Kenya</strong></td>
+              <td>Car Rental</td>
+              <td>John M.</td>
+              <td style="color:var(--accent)">Premium</td>
+              <td style="color:var(--muted)">2h ago</td>
+              <td><span class="status-pill status-pending">Pending</span></td>
+              <td>
+                <button class="table-action ta-approve" onclick="showToast('✅ SwiftWheels approved!')">Approve</button>
+                <button class="table-action ta-reject" onclick="showToast('❌ Listing rejected.')">Reject</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>StyleHouse KE</strong></td>
+              <td>E-Commerce</td>
+              <td>Alice W.</td>
+              <td>Standard</td>
+              <td style="color:var(--muted)">5h ago</td>
+              <td><span class="status-pill status-review">In Review</span></td>
+              <td>
+                <button class="table-action ta-approve" onclick="showToast('✅ StyleHouse approved!')">Approve</button>
+                <button class="table-action ta-reject">Reject</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Mama's Kitchen</strong></td>
+              <td>Food &amp; Dining</td>
+              <td>Grace N.</td>
+              <td>Basic</td>
+              <td style="color:var(--muted)">1d ago</td>
+              <td><span class="status-pill status-active">Active</span></td>
+              <td>
+                <button class="table-action ta-view" onclick="showBusiness('mamakitchen')">View</button>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>LuxLiving Properties</strong></td>
+              <td>Housing</td>
+              <td>Peter K.</td>
+              <td style="color:var(--accent)">Premium</td>
+              <td style="color:var(--muted)">2d ago</td>
+              <td><span class="status-pill status-active">Active</span></td>
+              <td>
+                <button class="table-action ta-view" onclick="showBusiness('luxliving')">View</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Quick Add Business (Admin) -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem">
+        <h3 style="font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:1rem">➕ Manually Add Business Listing</h3>
+        <div class="form-row cols-2">
+          <div class="form-group"><label>Business Name</label><input type="text" placeholder="Business name…"></div>
+          <div class="form-group"><label>Category</label>
+            <select>
+              <option>Select category…</option>
+              <option>E-Commerce</option><option>Housing</option><option>Car Rental</option><option>Car Sales</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group"><label>Owner Contact</label><input type="text" placeholder="Phone or email…"></div>
+          <div class="form-group"><label>Listing Plan</label>
+            <select><option>Basic</option><option>Standard</option><option>Premium</option></select>
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
+          <button class="btn btn-ghost">Clear</button>
+          <button class="btn btn-accent" onclick="showToast('✅ Business listing created by admin!')">Create Listing</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div><!-- /screen-admin -->
+
+<!-- ═══════════════════════════════════════════════════ TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon">✅</span>
+  <span class="toast-msg" id="toast-msg">Action completed!</span>
+  <span class="toast-close" onclick="hideToast()">✕</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ MODAL: PRICING -->
+<div class="modal-overlay" id="modal-pricing">
+  <div class="modal">
+    <h3>💰 BizHub Listing Plans</h3>
+    <p>Choose the right plan to get your business in front of thousands of customers every month.</p>
+    <div style="display:grid;gap:.75rem;margin-bottom:1.4rem">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.9rem 1rem;display:flex;justify-content:space-between">
+        <div><strong>Basic</strong><div style="font-size:.78rem;color:var(--muted)">Card listing · 2 photos · Contact info</div></div>
+        <strong style="color:var(--accent)">KES 999/mo</strong>
+      </div>
+      <div style="background:var(--surface2);border:1px solid rgba(245,166,35,.3);border-radius:var(--radius-sm);padding:.9rem 1rem;display:flex;justify-content:space-between">
+        <div><strong>Standard ⭐</strong><div style="font-size:.78rem;color:var(--muted)">Featured · 10 photos · Analytics</div></div>
+        <strong style="color:var(--accent)">KES 2,499/mo</strong>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.9rem 1rem;display:flex;justify-content:space-between">
+        <div><strong>Premium 👑</strong><div style="font-size:.78rem;color:var(--muted)">Sponsored badge · Unlimited media · Top slot</div></div>
+        <strong style="color:var(--accent)">KES 5,999/mo</strong>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('pricing')">Close</button>
+      <button class="btn btn-accent" onclick="closeModal('pricing');showScreen('add-business')">Get Started →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ─── Screen Navigation ─── */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ─── Category Detail ─── */
+  const catData = {
+    'ecommerce':  { name:'E-Commerce Businesses', icon:'🛒', desc:'312 registered businesses · Updated today' },
+    'housing':    { name:'Housing & Real Estate',  icon:'🏠', desc:'184 property listings · Updated today' },
+    'car-rental': { name:'Car Rental Providers',   icon:'🚗', desc:'97 verified providers · Updated today' },
+    'car-sale':   { name:'Car Sales',              icon:'🚙', desc:'530 vehicles listed · Updated today' },
+    'food':       { name:'Food & Dining',          icon:'🍽️', desc:'221 restaurants & eateries · Updated today' },
+    'services':   { name:'Services & Repair',      icon:'🔧', desc:'178 service providers · Updated today' },
+    'health':     { name:'Health & Wellness',      icon:'💊', desc:'143 clinics & wellness centres · Updated today' },
+    'education':  { name:'Education',              icon:'📚', desc:'89 institutions · Updated today' },
+  };
+  function showCategory(cat) {
+    const d = catData[cat] || catData['ecommerce'];
+    document.getElementById('cat-breadcrumb').textContent = d.name;
+    document.getElementById('cat-detail-icon').textContent = d.icon;
+    document.getElementById('cat-detail-name').textContent = d.name;
+    document.getElementById('cat-detail-desc').textContent = d.desc;
+    showScreen('category');
+  }
+
+  /* ─── Business Profile ─── */
+  function showBusiness(id) {
+    showScreen('business');
+  }
+
+  /* ─── Plan Selector ─── */
+  function selectPlan(el) {
+    document.querySelectorAll('.plan-option').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  /* ─── Search ─── */
+  function handleSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (q) showCategory('ecommerce');
+  }
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSearch();
+  });
+
+  /* ─── Submit Business ─── */
+  function submitBusiness() {
+    showToast('🎉 Listing submitted! Pending admin review.');
+    setTimeout(() => showScreen('home'), 1800);
+  }
+
+  /* ─── Toast ─── */
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 3500);
+  }
+  function hideToast() {
+    document.getElementById('toast').classList.remove('show');
+  }
+
+  /* ─── Modal ─── */
+  function showModal(id) {
+    document.getElementById('modal-' + id).classList.add('open');
+  }
+  function closeModal(id) {
+    document.getElementById('modal-' + id).classList.remove('open');
+  }
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => {
+      if (e.target === m) m.classList.remove('open');
+    });
+  });
+</script>
+</body>
+</html>
